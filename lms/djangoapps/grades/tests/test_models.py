@@ -166,7 +166,7 @@ class VisibleBlocksTest(GradesModelTestCase):
             'version': BLOCK_RECORD_LIST_VERSION,
         }
         expected_json = json.dumps(expected_data, separators=(',', ':'), sort_keys=True)
-        expected_hash = b64encode(sha1(expected_json).digest())
+        expected_hash = b64encode(sha1(expected_json.encode('utf-8')).digest())
         self.assertEqual(expected_data, json.loads(vblocks.blocks_json))
         self.assertEqual(expected_json, vblocks.blocks_json)
         self.assertEqual(expected_hash, vblocks.hashed)
@@ -185,7 +185,7 @@ class VisibleBlocksTest(GradesModelTestCase):
         self.assertNotEqual(stored_vblocks.hashed, repeat_vblocks.hashed)
 
         self.assertEqual(stored_vblocks.pk, same_order_vblocks.pk)
-        self.assertEqual(stored_vblocks.hashed, same_order_vblocks.hashed)
+        self.assertEqual(stored_vblocks.hashed.decode('utf-8'), same_order_vblocks.hashed)
 
         self.assertNotEqual(stored_vblocks.pk, new_vblocks.pk)
         self.assertNotEqual(stored_vblocks.hashed, new_vblocks.hashed)
