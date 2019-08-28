@@ -86,14 +86,14 @@ class TestNavigation(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
 
     def assertTabActive(self, tabname, response):
         ''' Check if the progress tab is active in the tab set '''
-        for line in response.content.split('\n'):
+        for line in response.content.decode('utf-8').split('\n'):
             if tabname in line and 'active' in line:
                 return
         raise AssertionError(u"assertTabActive failed: {} not active".format(tabname))
 
     def assertTabInactive(self, tabname, response):
         ''' Check if the progress tab is active in the tab set '''
-        for line in response.content.split('\n'):
+        for line in response.content.decode('utf-8').split('\n'):
             if tabname in line and 'active' in line:
                 raise AssertionError("assertTabInactive failed: " + tabname + " active")
         return
@@ -113,9 +113,8 @@ class TestNavigation(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         test_data = (
             ('tabs', False, True),
             ('none', False, False),
-            ('fullchrome', True, True),
             ('accordion', True, False),
-            ('fullchrome', True, True)
+            ('fullchrome', True, True),
         )
         for (displayname, accordion, tabs) in test_data:
             response = self.client.get(reverse('courseware_section', kwargs={
@@ -123,8 +122,8 @@ class TestNavigation(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
                 'chapter': 'Chrome',
                 'section': displayname,
             }))
-            self.assertEquals('course-tabs' in response.content, tabs)
-            self.assertEquals('course-navigation' in response.content, accordion)
+            self.assertEquals('course-tabs' in response.content.decode('utf-8'), tabs)
+            self.assertEquals('course-navigation' in response.content.decode('utf-8'), accordion)
 
         self.assertTabInactive('progress', response)
         self.assertTabActive('courseware', response)
