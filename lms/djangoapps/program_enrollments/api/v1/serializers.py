@@ -6,10 +6,19 @@ from __future__ import absolute_import
 from rest_framework import serializers
 from six import text_type
 
-from lms.djangoapps.program_enrollments.models import ProgramCourseEnrollment, ProgramEnrollment
-from lms.djangoapps.program_enrollments.api.v1.constants import (
+from lms.djangoapps.program_enrollments.models import (
+    ProgramCourseEnrollment,
+    ProgramEnrollment,
+)
+from lms.djangoapps.program_enrollments.grades_api import (
+    ProgramCourseGradeError,
+    ProgramCourseGradeOk,
+)
+
+from .constants import (
     CourseRunProgressStatuses,
-    ProgramEnrollmentResponseStatuses
+    ProgramEnrollmentResponseStatuses,
+    ProgramCourseEnrollmentResponseStatuses,
 )
 
 
@@ -19,72 +28,18 @@ class InvalidStatusMixin(object):
     """
     def has_invalid_status(self):
         """
-        Returns whether or not this serializer has an invalid error choice on the "status" field
+        Returns whether or not this serializer has an invalid error choice on
+        the "status" field.
         """
-        try:
-            for status_error in self.errors['status']:
-                if status_error.code == 'invalid_choice':
-                    return True
-        except KeyError:
-            pass
+        for status_error in self.errors.get('status', []):
+            if status_error.code == 'invalid_choice':
+                return True
         return False
 
 
-# pylint: disable=abstract-method
-class ProgramEnrollmentSerializer(serializers.ModelSerializer, InvalidStatusMixin):
+class ProgramEnrollmentSerializer(serializers.Serializer):
     """
-    Serializer for Program Enrollments
-    """
-
-    class Meta(object):
-        model = ProgramEnrollment
-        fields = ('user', 'external_user_key', 'program_uuid', 'curriculum_uuid', 'status')
-        validators = []
-
-    def validate(self, attrs):
-        """ This modifies self.instance in the case of updates """
-        if not self.instance:
-            enrollment = ProgramEnrollment(**attrs)
-            enrollment.full_clean()
-        else:
-            for key, value in attrs.items():
-                setattr(self.instance, key, value)
-            self.instance.full_clean()
-
-        return attrs
-
-    def create(self, validated_data):
-        return ProgramEnrollment.objects.create(**validated_data)
-
-
-class BaseProgramEnrollmentRequestMixin(serializers.Serializer, InvalidStatusMixin):
-    """
-    Base fields for all program enrollment related serializers
-    """
-    student_key = serializers.CharField()
-    status = serializers.ChoiceField(
-        allow_blank=False,
-        choices=ProgramEnrollmentResponseStatuses.VALID_STATUSES
-    )
-
-
-class ProgramEnrollmentCreateRequestSerializer(BaseProgramEnrollmentRequestMixin):
-    """
-    Serializer for program enrollment creation requests
-    """
-    curriculum_uuid = serializers.UUIDField()
-
-
-class ProgramEnrollmentModifyRequestSerializer(BaseProgramEnrollmentRequestMixin):
-    """
-    Serializer for program enrollment modification requests
-    """
-    pass
-
-
-class ProgramEnrollmentListSerializer(serializers.Serializer):
-    """
-    Serializer for listing enrollments in a program.
+    Serializer for displaying enrollments in a program.
     """
     student_key = serializers.CharField(source='external_user_key')
     status = serializers.CharField()
@@ -98,20 +53,46 @@ class ProgramEnrollmentListSerializer(serializers.Serializer):
         return bool(obj.user)
 
 
+class ProgramEnrollmentRequestMixin(serializers.Serializer, InvalidStatusMixin):
+    """
+    Base fields for all program enrollment related serializers.
+    """
+    student_key = serializers.CharField()
+    status = serializers.ChoiceField(
+        allow_blank=False,
+        choices=ProgramEnrollmentResponseStatuses.__ALL__,
+    )
+
+
+class ProgramEnrollmentCreateRequestSerializer(ProgramEnrollmentRequestMixin):
+    """
+    Serializer for program enrollment creation requests.
+    """
+    curriculum_uuid = serializers.UUIDField()
+
+
+class ProgramEnrollmentModifyRequestSerializer(ProgramEnrollmentRequestMixin):
+    """
+    Serializer for program enrollment modification requests
+    """
+    pass
+
+
 # pylint: disable=abstract-method
 class ProgramCourseEnrollmentRequestSerializer(serializers.Serializer, InvalidStatusMixin):
     """
     Serializer for request to create a ProgramCourseEnrollment
     """
-    STATUS_CHOICES = ['active', 'inactive']
-
     student_key = serializers.CharField(allow_blank=False)
-    status = serializers.ChoiceField(allow_blank=False, choices=STATUS_CHOICES)
+    status = serializers.ChoiceField(
+        allow_blank=False,
+        choices=ProgramCourseEnrollmentResponseStatuses.__ALL__,
+    )
 
 
-class ProgramCourseEnrollmentListSerializer(serializers.Serializer):
+class ProgramCourseEnrollmentSerializer(serializers.Serializer):
     """
-    Serializer for listing course enrollments in a program.
+    Serializer for display program-course enrollments.
     """
     student_key = serializers.SerializerMethodField()
     status = serializers.CharField()
@@ -131,60 +112,21 @@ class ProgramCourseEnrollmentListSerializer(serializers.Serializer):
         return text_type(obj.program_enrollment.curriculum_uuid)
 
 
-class ProgramCourseGradeResult(object):
-    """
-    Represents a courserun grade for a user enrolled through a program.
-
-    Can be passed to ProgramCourseGradeResultSerializer.
-    """
-    is_error = False
-
-    def __init__(self, program_course_enrollment, course_grade):
-        """
-        Creates a new grade result given a ProgramCourseEnrollment object
-        and a course grade object.
-        """
-        self.student_key = program_course_enrollment.program_enrollment.external_user_key
-        self.passed = course_grade.passed
-        self.percent = course_grade.percent
-        self.letter_grade = course_grade.letter_grade
-
-
-class ProgramCourseGradeErrorResult(object):
-    """
-    Represents a failure to load a courserun grade for a user enrolled through
-    a program.
-
-    Can be passed to ProgramCourseGradeResultSerializer.
-    """
-    is_error = True
-
-    def __init__(self, program_course_enrollment, exception=None):
-        """
-        Creates a new course grade error object given a
-        ProgramCourseEnrollment and an exception.
-        """
-        self.student_key = program_course_enrollment.program_enrollment.external_user_key
-        self.error = text_type(exception) if exception else u"Unknown error"
-
-
 class ProgramCourseGradeResultSerializer(serializers.Serializer):
     """
     Serializer for a user's grade in a program courserun.
 
-    Meant to be used with ProgramCourseGradeResult
-    or ProgramCourseGradeErrorResult as input.
-    Absence of fields other than `student_key` will be ignored.
+    Meant to be used with BaseProgramCourseGrade.
     """
     # Required
     student_key = serializers.CharField()
 
-    # From ProgramCourseGradeResult only
+    # From ProgramCourseGradeOk only
     passed = serializers.BooleanField(required=False)
     percent = serializers.FloatField(required=False)
     letter_grade = serializers.CharField(required=False)
 
-    # From ProgramCourseGradeErrorResult only
+    # From ProgramCourseGradeError only
     error = serializers.CharField(required=False)
 
 
