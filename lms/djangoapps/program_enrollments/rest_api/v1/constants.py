@@ -18,7 +18,7 @@ REQUEST_STUDENT_KEY = 'student_key'
 ENABLE_ENROLLMENT_RESET_FLAG = 'ENABLE_ENROLLMENT_RESET'
 
 
-class EnrollmentErrorStatuses(object):
+class _EnrollmentErrorStatuses(object):
     """
     Error statuses common to program and program-course enrollments responses.
     """
@@ -60,7 +60,7 @@ class EnrollmentErrorStatuses(object):
 
 class ProgramResponseStatuses(
         ProgramEnrollmentStatuses,
-        EnrollmentErrorStatuses,
+        _EnrollmentErrorStatuses,
 ):
     """
     Valid program enrollment response statuses.
@@ -68,13 +68,13 @@ class ProgramResponseStatuses(
     Combines error statuses and OK statuses.
     """
     __OK__ = ProgramEnrollmentStatuses.__ALL__
-    __ERRORS__ = EnrollmentErrorStatuses.__ALL__
-    __ALL__ = __OK__ + __ERRORS__f
+    __ERRORS__ = _EnrollmentErrorStatuses.__ALL__
+    __ALL__ = __OK__ + __ERRORS__
 
 
 class ProgramCourseResponseStatuses(
         ProgramCourseEnrollmentStatuses,
-        EnrollmentErrorStatuses,
+        _EnrollmentErrorStatuses,
 ):
     """
     Valid program-course enrollment response statuses.
@@ -87,7 +87,7 @@ class ProgramCourseResponseStatuses(
     NOT_FOUND = "not-found"
 
     __OK__ = ProgramCourseEnrollmentStatuses.__ALL__
-    __ERRORS__ = (NOT_FOUND,) + EnrollmentErrorStatuses.__ALL__
+    __ERRORS__ = (NOT_FOUND,) + _EnrollmentErrorStatuses.__ALL__
     __ALL__ = __OK__ + __ERRORS__
 
 
@@ -98,3 +98,9 @@ class CourseRunProgressStatuses(object):
     IN_PROGRESS = 'in_progress'
     UPCOMING = 'upcoming'
     COMPLETED = 'completed'
+
+    __ALL__ = (
+        IN_PROGRESS,
+        UPCOMING,
+        COMPLETED,
+    )

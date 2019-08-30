@@ -160,7 +160,7 @@ class CourseRunOverviewListSerializer(serializers.Serializer):
     course_runs = serializers.ListField(child=CourseRunOverviewSerializer())
 
 
-# TODO: The following classes are not serializers, and should probably 
+# TODO: The following classes are not serializers, and should probably
 # be moved to api.py as part of EDUCATOR-4321.
 
 

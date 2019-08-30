@@ -28,14 +28,7 @@ from course_modes.models import CourseMode
 from lms.djangoapps.certificates.models import CertificateStatuses
 from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
 from lms.djangoapps.courseware.tests.factories import GlobalStaffFactory, InstructorFactory
-from lms.djangoapps.program_enrollments.api.v1.constants import (
-    ENABLE_ENROLLMENT_RESET_FLAG,
-    MAX_ENROLLMENT_RECORDS,
-    REQUEST_STUDENT_KEY
-)
-from lms.djangoapps.program_enrollments.api.v1.constants import CourseEnrollmentResponseStatuses as CourseStatuses
-from lms.djangoapps.program_enrollments.api.v1.constants import CourseRunProgressStatuses
-from lms.djangoapps.program_enrollments.api.v1.constants import ProgramEnrollmentResponseStatuses as ProgramStatuses
+
 from lms.djangoapps.program_enrollments.models import ProgramCourseEnrollment, ProgramEnrollment
 from lms.djangoapps.program_enrollments.tests.factories import ProgramCourseEnrollmentFactory, ProgramEnrollmentFactory
 from lms.djangoapps.program_enrollments.utils import ProviderDoesNotExistException
@@ -52,6 +45,14 @@ from third_party_auth.tests.factories import SAMLProviderConfigFactory
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory as ModulestoreCourseFactory
 from xmodule.modulestore.tests.factories import ItemFactory
+from ..constants import ProgramCourseResponseStatuses as CourseStatuses
+from ..constants import CourseRunProgressStatuses
+from ..constants import ProgramResponseStatuses as ProgramStatuses
+from ..constants import (
+    ENABLE_ENROLLMENT_RESET_FLAG,
+    MAX_ENROLLMENT_RECORDS,
+    REQUEST_STUDENT_KEY
+)
 
 
 class ProgramCacheTestCaseMixin(CacheIsolationMixin):
