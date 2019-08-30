@@ -86,7 +86,7 @@ def verify_program_exists(view_func):
         """
         Wraps the given view_function.
         """
-        if not self.program:
+        if self.program is None:
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
                 developer_message='no program exists with given key',
