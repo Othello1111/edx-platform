@@ -103,7 +103,7 @@ class ProgramCourseEnrollmentRequestSerializer(serializers.Serializer, InvalidSt
     )
 
 
-class ProgramCourseGradeResultSerializer(serializers.Serializer):
+class ProgramCourseGradeSerializer(serializers.Serializer):
     """
     Serializer for a user's grade in a program courserun.
 
@@ -158,3 +158,62 @@ class CourseRunOverviewListSerializer(serializers.Serializer):
     Serializer for a list of course run overviews.
     """
     course_runs = serializers.ListField(child=CourseRunOverviewSerializer())
+
+
+# TODO: The following classes are not serializers, and should probably 
+# be moved to api.py as part of EDUCATOR-4321.
+
+
+class BaseProgramCourseGrade(object):
+    """
+    Base for either a courserun grade or grade-loading failure.
+
+    Can be passed to ProgramCourseGradeResultSerializer.
+    """
+    is_error = None  # Override in subclass
+
+    def __init__(self, program_course_enrollment):
+        """
+        Given a ProgramCourseEnrollment,
+        create a BaseProgramCourseGradeResult instance.
+        """
+        self.student_key = (
+            program_course_enrollment.program_enrollment.external_user_key
+        )
+
+
+class ProgramCourseGradeOk(object):
+    """
+    Represents a courserun grade for a user enrolled through a program.
+    """
+    is_error = False
+
+    def __init__(self, program_course_enrollment, course_grade):
+        """
+        Given a ProgramCourseEnrollment and course grade object,
+        create a ProgramCourseGradeOk.
+        """
+        super(ProgramCourseGradeOk, self).__init__(
+            program_course_enrollment
+        )
+        self.passed = course_grade.passed
+        self.percent = course_grade.percent
+        self.letter_grade = course_grade.letter_grade
+
+
+class ProgramCourseGradeError(object):
+    """
+    Represents a failure to load a courserun grade for a user enrolled through
+    a program.
+    """
+    is_error = True
+
+    def __init__(self, program_course_enrollment, exception=None):
+        """
+        Given a ProgramCourseEnrollment and an Exception,
+        create a ProgramCourseGradeError.
+        """
+        super(ProgramCourseGradeError, self).__init__(
+            program_course_enrollment
+        )
+        self.error = text_type(exception) if exception else u"Unknown error"

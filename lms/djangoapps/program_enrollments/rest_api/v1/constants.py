@@ -58,7 +58,7 @@ class EnrollmentErrorStatuses(object):
     )
 
 
-class ProgramEnrollmentResponseStatuses(
+class ProgramResponseStatuses(
         ProgramEnrollmentStatuses,
         EnrollmentErrorStatuses,
 ):
@@ -69,10 +69,10 @@ class ProgramEnrollmentResponseStatuses(
     """
     __OK__ = ProgramEnrollmentStatuses.__ALL__
     __ERRORS__ = EnrollmentErrorStatuses.__ALL__
-    __ALL__ = __OK__ + __ERRORS__
+    __ALL__ = __OK__ + __ERRORS__f
 
 
-class ProgramCourseEnrollmentResponseStatuses(
+class ProgramCourseResponseStatuses(
         ProgramCourseEnrollmentStatuses,
         EnrollmentErrorStatuses,
 ):

@@ -16,7 +16,7 @@ class ProgramEnrollmentStatuses(object):
     PENDING = 'pending'
     SUSPENDED = 'suspended'
     CANCELED = 'canceled'
-    __ACTIVE__ = (ENROLLED, )
+    __ACTIVE__ = (ENROLLED, PENDING)
     __ALL__ = (ENROLLED, PENDING, SUSPENDED, CANCELED)
 
 
