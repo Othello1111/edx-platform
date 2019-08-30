@@ -359,10 +359,16 @@ class CategoryMapTestMixin(object):
         Call `get_discussion_category_map`, and verify that it returns
         what is expected.
         """
+        original = utils.get_discussion_category_map(self.course, requesting_user or self.user)
+        six.assertCountEqual(self, original, expected)
+
         self.assertEqual(
-            utils.get_discussion_category_map(self.course, requesting_user or self.user),
-            expected
+            dict(original['subcategories']['Week 1']['children']),
+            dict(expected['subcategories']['Week 1']['children'])
         )
+
+        self.assertEqual(original['entries'], expected['entries'])
+        self.assertEqual(original['children'], expected['children'])
 
 
 class CategoryMapTestCase(CategoryMapTestMixin, ModuleStoreTestCase):
