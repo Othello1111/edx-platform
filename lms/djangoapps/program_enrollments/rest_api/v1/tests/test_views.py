@@ -28,7 +28,6 @@ from course_modes.models import CourseMode
 from lms.djangoapps.certificates.models import CertificateStatuses
 from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
 from lms.djangoapps.courseware.tests.factories import GlobalStaffFactory, InstructorFactory
-
 from lms.djangoapps.program_enrollments.models import ProgramCourseEnrollment, ProgramEnrollment
 from lms.djangoapps.program_enrollments.tests.factories import ProgramCourseEnrollmentFactory, ProgramEnrollmentFactory
 from lms.djangoapps.program_enrollments.utils import ProviderDoesNotExistException
@@ -45,15 +44,15 @@ from third_party_auth.tests.factories import SAMLProviderConfigFactory
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory as ModulestoreCourseFactory
 from xmodule.modulestore.tests.factories import ItemFactory
-from ..constants import ProgramCourseResponseStatuses as CourseStatuses
-from ..constants import CourseRunProgressStatuses
-from ..constants import ProgramResponseStatuses as ProgramStatuses
+
 from ..constants import (
     ENABLE_ENROLLMENT_RESET_FLAG,
     MAX_ENROLLMENT_RECORDS,
-    REQUEST_STUDENT_KEY
+    REQUEST_STUDENT_KEY,
+    CourseRunProgressStatuses
 )
-
+from ..constants import ProgramCourseResponseStatuses as CourseStatuses
+from ..constants import ProgramResponseStatuses as ProgramStatuses
 
 _VIEW_MOCK_FMT = 'lms.djangoapps.program_enrollments.rest_api.v1.views.{}'
 
