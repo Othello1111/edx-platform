@@ -573,6 +573,40 @@ def get_course_run_details(course_run_key, fields):
     return course_run_details
 
 
+def does_program_exist(uuid):
+    """
+    Check if a program with the given uuid is in the cache.
+
+    Arguments:
+        uuid (str)
+
+    Returns: bool
+    """
+    return PROGRAM_CACHE_KEY_TPL.format(uuid=uuid) in cache
+
+
+def is_course_run_in_program(course_run_key, program_uuid):
+    """
+    Check if a course run is part of a program.
+
+    Arguments:
+        program_uuid (str)
+        course_run_key (str)
+
+    Returns: bool
+        Whether the program exists AND the course run is part of it.
+    """
+    # Right now, this function simply loads all the program data from the cache,
+    # walks the structure to collect the set of course run keys,
+    # and then sees if `course_run_key` is in that set.
+    # If we need to optimize this later, we can.
+    program = get_programs(uuid=program_uuid)
+    if not program:
+        return None
+    course_run_keys = course_run_keys_for_program(program)
+    return course_run_key in course_run_keys
+
+
 def course_run_keys_for_program(parent_program):
     """
     All of the course run keys associated with this ``parent_program``, either
