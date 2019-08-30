@@ -8,17 +8,17 @@ from uuid import uuid4
 import ddt
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from edx_django_utils.cache import RequestCache
 from opaque_keys.edx.keys import CourseKey
 from six.moves import range
 from testfixtures import LogCapture
 
 from course_modes.models import CourseMode
-from edx_django_utils.cache import RequestCache
-from lms.djangoapps.program_enrollments.models import ProgramEnrollment, ProgramCourseEnrollment
-from student.models import CourseEnrollment
-from student.tests.factories import CourseEnrollmentFactory, UserFactory
+from lms.djangoapps.program_enrollments.models import ProgramCourseEnrollment, ProgramEnrollment
 from openedx.core.djangoapps.catalog.tests.factories import generate_course_run_key
 from openedx.core.djangoapps.content.course_overviews.tests.factories import CourseOverviewFactory
+from student.models import CourseEnrollment
+from student.tests.factories import CourseEnrollmentFactory, UserFactory
 
 
 class ProgramEnrollmentModelTests(TestCase):
