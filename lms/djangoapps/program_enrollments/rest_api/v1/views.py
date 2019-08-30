@@ -37,7 +37,6 @@ from lms.djangoapps.program_enrollments.utils import (
 )
 from openedx.core.djangoapps.catalog.utils import (
     course_run_keys_for_program,
-    does_program_exist,
     get_programs,
     get_programs_by_type,
     get_programs_for_organization,
@@ -79,14 +78,15 @@ def verify_program_exists(view_func):
     Raises:
         An API error if the `program_uuid` kwarg in the wrapped function
         does not exist in the catalog programs cache.
+
+    Expects to be used within a ProgramSpecificViewMixin subclass.
     """
     @wraps(view_func)
     def wrapped_function(self, request, **kwargs):
         """
         Wraps the given view_function.
         """
-        program_uuid = kwargs['program_uuid']
-        if not does_program_exist(program_uuid):
+        if not self.program:
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
                 developer_message='no program exists with given key',
@@ -103,17 +103,19 @@ def verify_course_exists_and_in_program(view_func):
         in the wrapped function is not part of the curriculum of the program
         specified by the `program_uuid` kwarg
 
-    Assumes that the program exists and that a program has exactly one active curriculum
+    This decorator guarantees existance of the program and course, so wrapping
+    alongside `verify_{program,course}_exists` is redundant.
+
+    Expects to be used within a subclass of ProgramCourseSpecificViewMixin.
     """
     @wraps(view_func)
+    @verify_program_exists
     @verify_course_exists
     def wrapped_function(self, request, **kwargs):
         """
         Wraps view function
         """
-        program_uuid = kwargs['program_uuid']
-        course_run_id = kwargs['course_id']
-        if not is_course_run_in_program(program_uuid, course_run_id):
+        if not is_course_run_in_program(self.course_run_key, self.program):
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
                 developer_message="the program's curriculum does not contain the given course",
@@ -130,7 +132,44 @@ class ProgramEnrollmentPagination(CourseEnrollmentPagination):
     page_size = 100
 
 
-class ProgramEnrollmentsView(DeveloperErrorViewMixin, PaginatedAPIView):
+class ProgramSpecificViewMixin(object):
+    """
+    A mixin for views that operate on or within a specific program.
+
+    Requires `program_uuid` to be one of the kwargs to the view.
+    """
+
+    @cached_property
+    def program(self):
+        """
+        The program specified by the `program_uuid` URL parameter.
+        """
+        return get_programs(uuid=self.program_uuid)
+
+    @property
+    def program_uuid(self):
+        """
+        The program specified by the `program_uuid` URL parameter.
+        """
+        return self.kwargs['program_uuid']
+
+
+class ProgramCourseSpecificViewMixin(ProgramSpecificViewMixin):
+    """
+    A mixin for views that operate on or within a specific course run in a program
+
+    Requires `course_id` to be one of the kwargs to the view.
+    """
+
+    @cached_property
+    def course_key(self):
+        """
+        The course key for the course run specified by the `course_id` URL parameter.
+        """
+        return CourseKey.from_string(self.kwargs['course_id'])
+
+
+class ProgramEnrollmentsView(ProgramSpecificViewMixin, DeveloperErrorViewMixin, PaginatedAPIView):
     """
     A view for Create/Read/Update methods on Program Enrollment data.
 
@@ -615,38 +654,8 @@ class UserProgramReadOnlyAccessView(DeveloperErrorViewMixin, PaginatedAPIView):
         return program_list
 
 
-class ProgramSpecificViewMixin(object):
-    """
-    A mixin for views that operate on or within a specific program.
-
-    Requires `program_uuid` to be one of the kwargs to the view.
-    """
-
-    @cached_property
-    def program(self):
-        """
-        The program specified by the `program_uuid` URL parameter.
-        """
-        return get_programs(uuid=self.kwargs['program_uuid'])
-
-
-class CourseRunSpecificViewMixin(ProgramSpecificViewMixin):
-    """
-    A mixin for views that operate on or within a specific course run in a program
-
-    Requires `course_id` to be one of the kwargs to the view.
-    """
-
-    @cached_property
-    def course_key(self):
-        """
-        The course key for the course run specified by the `course_id` URL parameter.
-        """
-        return CourseKey.from_string(self.kwargs['course_id'])
-
-
 # pylint: disable=line-too-long
-class ProgramCourseEnrollmentsView(DeveloperErrorViewMixin, CourseRunSpecificViewMixin, PaginatedAPIView):
+class ProgramCourseEnrollmentsView(DeveloperErrorViewMixin, ProgramCourseSpecificViewMixin, PaginatedAPIView):
     """
     A view for enrolling students in a course through a program,
     modifying program course enrollments, and listing program course
@@ -727,7 +736,6 @@ class ProgramCourseEnrollmentsView(DeveloperErrorViewMixin, CourseRunSpecificVie
     permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS,)
     pagination_class = ProgramEnrollmentPagination
 
-    @verify_course_exists
     @verify_course_exists_and_in_program
     def get(self, request, program_uuid=None, course_id=None):
         """
@@ -745,7 +753,6 @@ class ProgramCourseEnrollmentsView(DeveloperErrorViewMixin, CourseRunSpecificVie
         serializer = ProgramCourseEnrollmentSerializer(paginated_enrollments, many=True)
         return self.get_paginated_response(serializer.data)
 
-    @verify_program_exists
     @verify_course_exists_and_in_program
     def post(self, request, program_uuid=None, course_id=None):
         """
@@ -757,7 +764,6 @@ class ProgramCourseEnrollmentsView(DeveloperErrorViewMixin, CourseRunSpecificVie
             self.enroll_learner_in_course
         )
 
-    @verify_program_exists
     @verify_course_exists_and_in_program
     # pylint: disable=unused-argument
     def patch(self, request, program_uuid=None, course_id=None):
@@ -770,7 +776,6 @@ class ProgramCourseEnrollmentsView(DeveloperErrorViewMixin, CourseRunSpecificVie
             self.modify_learner_enrollment_status
         )
 
-    @verify_program_exists
     @verify_course_exists_and_in_program
     # pylint: disable=unused-argument
     def put(self, request, program_uuid=None, course_id=None):
@@ -1018,8 +1023,10 @@ class ProgramCourseEnrollmentOverviewView(DeveloperErrorViewMixin, ProgramSpecif
         user = request.user
         self._check_program_enrollment_exists(user, program_uuid)
 
-        program = get_programs(uuid=program_uuid)
-        course_run_keys = [CourseKey.from_string(key) for key in course_run_keys_for_program(program)]
+        course_run_keys = [
+            CourseKey.from_string(key)
+            for key in course_run_keys_for_program(self.program)
+        ]
 
         course_enrollments = CourseEnrollment.objects.filter(
             user=user,
@@ -1090,7 +1097,7 @@ class ProgramCourseEnrollmentOverviewView(DeveloperErrorViewMixin, ProgramSpecif
 
 class ProgramCourseGradesView(
         DeveloperErrorViewMixin,
-        CourseRunSpecificViewMixin,
+        ProgramCourseSpecificViewMixin,
         PaginatedAPIView,
 ):
     """
@@ -1162,8 +1169,7 @@ class ProgramCourseGradesView(
     permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS,)
     pagination_class = ProgramEnrollmentPagination
 
-    @verify_course_exists
-    @verify_program_exists
+    @verify_course_exists_and_in_program
     def get(self, request, program_uuid=None, course_id=None):
         """
         Defines the GET list endpoint for ProgramCourseGrade objects.

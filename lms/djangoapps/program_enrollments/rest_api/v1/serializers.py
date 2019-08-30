@@ -182,7 +182,7 @@ class BaseProgramCourseGrade(object):
         )
 
 
-class ProgramCourseGradeOk(object):
+class ProgramCourseGradeOk(BaseProgramCourseGrade):
     """
     Represents a courserun grade for a user enrolled through a program.
     """
@@ -201,7 +201,7 @@ class ProgramCourseGradeOk(object):
         self.letter_grade = course_grade.letter_grade
 
 
-class ProgramCourseGradeError(object):
+class ProgramCourseGradeError(BaseProgramCourseGrade):
     """
     Represents a failure to load a courserun grade for a user enrolled through
     a program.
