@@ -115,7 +115,7 @@ def verify_course_exists_and_in_program(view_func):
         """
         Wraps view function
         """
-        if not is_course_run_in_program(self.course_run_key, self.program):
+        if not is_course_run_in_program(self.course_key, self.program):
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
                 developer_message="the program's curriculum does not contain the given course",

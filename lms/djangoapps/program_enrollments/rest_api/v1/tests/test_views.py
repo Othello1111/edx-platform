@@ -298,12 +298,12 @@ class ProgramEnrollmentListTest(ListViewTestMixin, APITestCase):
         """
         ProgramEnrollment.objects.filter(program_uuid=self.program_uuid).delete()
 
-    @mock.patch(_VIEW_MOCK_FMT.format('does_program_exist'), autospec=True, return_value=False)
-    def test_404_if_no_program_with_key(self, mock_does_program_exist):
+    @mock.patch(_VIEW_MOCK_FMT.format('get_programs'), autospec=True, return_value=False)
+    def test_404_if_no_program_with_key(self, mock_get_programs):
         self.client.login(username=self.global_staff.username, password=self.password)
         response = self.client.get(self.get_url(self.program_uuid))
         assert status.HTTP_404_NOT_FOUND == response.status_code
-        mock_does_program_exist.assert_called_once_with(self.program_uuid)
+        mock_get_programs.assert_called_once_with(uuid=self.program_uuid)
 
     def test_403_if_not_staff(self):
         self.client.login(username=self.student.username, password=self.password)
