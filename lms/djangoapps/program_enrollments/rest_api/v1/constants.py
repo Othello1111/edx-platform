@@ -2,11 +2,7 @@
 Constants used throughout the program_enrollments V1 API.
 """
 
-from lms.djangoapps.program_enrollments.constants import (
-    ProgramCourseEnrollmentStatuses,
-    ProgramEnrollmentStatuses,
-)
-
+from lms.djangoapps.program_enrollments.constants import ProgramCourseEnrollmentStatuses, ProgramEnrollmentStatuses
 
 # Captures strings composed of alphanumeric characters a-f and dashes.
 PROGRAM_UUID_PATTERN = r'(?P<program_uuid>[A-Fa-f0-9-]+)'

@@ -6,20 +6,12 @@ from __future__ import absolute_import
 from rest_framework import serializers
 from six import text_type
 
-from lms.djangoapps.program_enrollments.models import (
-    ProgramCourseEnrollment,
-    ProgramEnrollment,
-)
-from lms.djangoapps.program_enrollments.grades_api import (
-    ProgramCourseGradeError,
-    ProgramCourseGradeOk,
-)
+from lms.djangoapps.program_enrollments.constants import ProgramCourseEnrollmentStatuses, ProgramEnrollmentStatuses
+from lms.djangoapps.program_enrollments.models import ProgramCourseEnrollment, ProgramEnrollment
 
-from .constants import (
-    CourseRunProgressStatuses,
-    ProgramEnrollmentResponseStatuses,
-    ProgramCourseEnrollmentResponseStatuses,
-)
+from .constants import CourseRunProgressStatuses
+
+# pylint: disable=abstract-method
 
 
 class InvalidStatusMixin(object):
@@ -53,43 +45,6 @@ class ProgramEnrollmentSerializer(serializers.Serializer):
         return bool(obj.user)
 
 
-class ProgramEnrollmentRequestMixin(serializers.Serializer, InvalidStatusMixin):
-    """
-    Base fields for all program enrollment related serializers.
-    """
-    student_key = serializers.CharField()
-    status = serializers.ChoiceField(
-        allow_blank=False,
-        choices=ProgramEnrollmentResponseStatuses.__ALL__,
-    )
-
-
-class ProgramEnrollmentCreateRequestSerializer(ProgramEnrollmentRequestMixin):
-    """
-    Serializer for program enrollment creation requests.
-    """
-    curriculum_uuid = serializers.UUIDField()
-
-
-class ProgramEnrollmentModifyRequestSerializer(ProgramEnrollmentRequestMixin):
-    """
-    Serializer for program enrollment modification requests
-    """
-    pass
-
-
-# pylint: disable=abstract-method
-class ProgramCourseEnrollmentRequestSerializer(serializers.Serializer, InvalidStatusMixin):
-    """
-    Serializer for request to create a ProgramCourseEnrollment
-    """
-    student_key = serializers.CharField(allow_blank=False)
-    status = serializers.ChoiceField(
-        allow_blank=False,
-        choices=ProgramCourseEnrollmentResponseStatuses.__ALL__,
-    )
-
-
 class ProgramCourseEnrollmentSerializer(serializers.Serializer):
     """
     Serializer for display program-course enrollments.
@@ -110,6 +65,42 @@ class ProgramCourseEnrollmentSerializer(serializers.Serializer):
 
     def get_curriculum_uuid(self, obj):
         return text_type(obj.program_enrollment.curriculum_uuid)
+
+
+class ProgramEnrollmentRequestMixin(serializers.Serializer, InvalidStatusMixin):
+    """
+    Base fields for all program enrollment related serializers.
+    """
+    student_key = serializers.CharField()
+    status = serializers.ChoiceField(
+        allow_blank=False,
+        choices=ProgramEnrollmentStatuses.__ALL__,
+    )
+
+
+class ProgramEnrollmentCreateRequestSerializer(ProgramEnrollmentRequestMixin):
+    """
+    Serializer for program enrollment creation requests.
+    """
+    curriculum_uuid = serializers.UUIDField()
+
+
+class ProgramEnrollmentModifyRequestSerializer(ProgramEnrollmentRequestMixin):
+    """
+    Serializer for program enrollment modification requests
+    """
+    pass
+
+
+class ProgramCourseEnrollmentRequestSerializer(serializers.Serializer, InvalidStatusMixin):
+    """
+    Serializer for request to create a ProgramCourseEnrollment
+    """
+    student_key = serializers.CharField(allow_blank=False)
+    status = serializers.ChoiceField(
+        allow_blank=False,
+        choices=ProgramCourseEnrollmentStatuses.__ALL__,
+    )
 
 
 class ProgramCourseGradeResultSerializer(serializers.Serializer):
