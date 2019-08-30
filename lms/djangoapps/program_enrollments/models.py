@@ -16,17 +16,14 @@ from simple_history.models import HistoricalRecords
 
 from course_modes.models import CourseMode
 from student.models import AlreadyEnrolledError, CourseEnrollment
+from util.query import ReadOnlyObjectsMixin
 
-from .constants import (
-    ProgramEnrollmentStatuses,
-    ProgramCourseEnrollmentStatuses,
-)
-
+from .constants import ProgramCourseEnrollmentStatuses, ProgramEnrollmentStatuses
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-class ProgramEnrollment(TimeStampedModel):  # pylint: disable=model-missing-unicode
+class ProgramEnrollment(TimeStampedModel, ReadOnlyObjectsMixin):  # pylint: disable=model-missing-unicode
     """
     This is a model for Program Enrollments from the registrar service
 
@@ -113,7 +110,7 @@ class ProgramEnrollment(TimeStampedModel):  # pylint: disable=model-missing-unic
         return '[ProgramEnrollment id={}]'.format(self.id)
 
 
-class ProgramCourseEnrollment(TimeStampedModel):  # pylint: disable=model-missing-unicode
+class ProgramCourseEnrollment(TimeStampedModel, ReadOnlyObjectsMixin):  # pylint: disable=model-missing-unicode
     """
     This is a model to represent a learner's enrollment in a course
     in the context of a program from the registrar service
@@ -182,7 +179,7 @@ class ProgramCourseEnrollment(TimeStampedModel):  # pylint: disable=model-missin
         if self.course_enrollment:
             if status == ProgramCourseEnrollmentStatuses.ACTIVE:
                 self.course_enrollment.activate()
-            elif status == ProgramCourseEnrollmentResponseStatuses.INACTIVE:
+            elif status == ProgramCourseEnrollmentStatuses.INACTIVE:
                 self.course_enrollment.deactivate()
             else:
                 message = ("Changed {enrollment} status to {status}, not changing course_enrollment"
@@ -218,7 +215,7 @@ class ProgramCourseEnrollment(TimeStampedModel):  # pylint: disable=model-missin
                 user=user,
                 course_id=self.course_key,
             )
-            if course_enrollment.mode in {CourseMode.AUDIT, CourseMode.HONOR}
+            if course_enrollment.mode in {CourseMode.AUDIT, CourseMode.HONOR}:
                 course_enrollment.mode = CourseMode.MASTERS
                 course_enrollment.save()
             self.course_enrollment = course_enrollment

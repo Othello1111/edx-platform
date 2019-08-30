@@ -3,6 +3,7 @@ Constants used throughout the program_enrollments app and exposed to other
 in-process apps through api.py.
 """
 
+
 class ProgramEnrollmentStatuses(object):
     """
     Status that a user may have enrolled in a program.
@@ -14,7 +15,7 @@ class ProgramEnrollmentStatuses(object):
     ENROLLED = 'enrolled'
     PENDING = 'pending'
     SUSPENDED = 'suspended'
-    CANCELED = 'canceled' 
+    CANCELED = 'canceled'
     __ACTIVE__ = (ENROLLED, )
     __ALL__ = (ENROLLED, PENDING, SUSPENDED, CANCELED)
 

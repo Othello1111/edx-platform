@@ -1,22 +1,10 @@
 """
-Grade-related Python APIs exposed by the program_enrollments app
-to other in-process apps.
+Grade-related Python APIs exposed by the program_enrollments app,
+concerning the grades of strudents in program-courses.
 """
 from __future__ import absolute_import
 
-from rest_framework import serializers
 from six import text_type
-
-from lms.djangoapps.program_enrollments.models import (
-    ProgramCourseEnrollment,
-    ProgramEnrollment,
-)
-
-from .constants import (
-    CourseRunProgressStatuses,
-    ProgramEnrollmentResponseStatuses,
-    ProgramCourseEnrollmentResponseStatuses,
-)
 
 
 class BaseProgramCourseGrade(object):
@@ -32,7 +20,7 @@ class BaseProgramCourseGrade(object):
         Given a ProgramCourseEnrollment,
         create a BaseProgramCourseGradeResult instance.
         """
-        self.student_key = (ProgramCourseGradeResult
+        self.student_key = (
             program_course_enrollment.program_enrollment.external_user_key
         )
 
@@ -48,7 +36,7 @@ class ProgramCourseGradeOk(object):
         Given a ProgramCourseEnrollment and course grade object,
         create a ProgramCourseGradeOk.
         """
-        super(self, ProgramCourseGradeOk).__init__(
+        super(ProgramCourseGradeOk, self).__init__(
             program_course_enrollment
         )
         self.passed = course_grade.passed
@@ -68,8 +56,7 @@ class ProgramCourseGradeError(object):
         Given a ProgramCourseEnrollment and an Exception,
         create a ProgramCourseGradeError.
         """
-        super(self, ProgramCourseGradeError).__init__(
+        super(ProgramCourseGradeError, self).__init__(
             program_course_enrollment
         )
         self.error = text_type(exception) if exception else u"Unknown error"
-
