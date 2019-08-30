@@ -5,18 +5,16 @@ ProgramEnrollment internal api
 from __future__ import absolute_import, unicode_literals
 
 from datetime import datetime, timedelta
-from pytz import UTC
 
 from django.urls import reverse
-
+from edx_when.api import get_dates_for_course
+from pytz import UTC
 from six import iteritems
 
 from bulk_email.api import is_bulk_email_feature_enabled, is_user_opted_out_for_course
-from edx_when.api import get_dates_for_course
 from xmodule.modulestore.django import modulestore
-from lms.djangoapps.program_enrollments.api.v1.constants import (
-    CourseRunProgressStatuses,
-)
+
+from .v1.constants import CourseRunProgressStatuses
 
 
 def get_due_dates(request, course_key, user):
