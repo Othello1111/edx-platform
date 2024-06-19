@@ -4,7 +4,7 @@
     "dependencies": {
         "annotator": "1.2.6",
         "backbone-relational": "0.9.0",
-        "codemirror": "3.21.0",
+        "codemirror": "5.58.2",
         "date": "1.0",
         "domready": "2.0.1",
         "draggabilly": "1.2.4",
@@ -13,8 +13,8 @@
         "rangeslider": "1.0",
         "slickgrid": "2.1",
         "timeago": "0.11.4",
-        "tinymce": "4.0.20",
-        "urijs": "1.11.2",
+        "tinymce": "7.2.0",
+        "urijs": "1.19.11",
         "url": "1.8.4"
     }
 }
